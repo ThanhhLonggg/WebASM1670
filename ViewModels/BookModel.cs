@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WebASM1670.ViewModels
 {
-    public class BookModel
+    public class BookModel : EditImageViewModel
     {
         [Required]
         public int Id { get; set; }

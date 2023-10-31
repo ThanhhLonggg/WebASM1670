@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WebASM1670.Data;
 using WebASM1670.Models;
 using WebASM1670.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,14 +22,14 @@ public class BooksController : Controller
         _hostEnvironment = hostEnvironment;
     }
 
-    // GET: Books
     public async Task<IActionResult> Index()
     {
         var books = await _context.Books.Include(b => b.Category).ToListAsync();
         return View(books);
     }
+  
 
-    // GET: Books/Create
+
     public IActionResult Create()
     {
         var categories = _context.Categories.ToList();
@@ -38,30 +39,22 @@ public class BooksController : Controller
         };
         return View(viewModel);
     }
-
-    // POST: Books/Create
+   
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BookModel bookModel)
     {
-        if (ModelState.IsValid)
+            if (ModelState.IsValid)
         {
-            var book = new Book
+            string uniqueFileName = ProcessUploadedFile(bookModel);
+            Book book = new()
             {
                 Title = bookModel.Title,
                 Quantity = bookModel.Quantity,
                 Price = bookModel.Price,
-                CategoryId = bookModel.CategoryId
+                CategoryId = bookModel.CategoryId,
+                Image = uniqueFileName
             };
-
-            if (bookModel.Image != null)
-            {
-                string uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images");
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + bookModel.Image.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                bookModel.Image.CopyTo(new FileStream(filePath, FileMode.Create));
-                book.Image = uniqueFileName;
-            }
 
             _context.Add(book);
             await _context.SaveChangesAsync();
@@ -71,7 +64,7 @@ public class BooksController : Controller
         return View(bookModel);
     }
 
-    // GET: Books/Edit/5
+
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -94,13 +87,14 @@ public class BooksController : Controller
             Quantity = book.Quantity,
             Price = book.Price,
             CategoryId = book.CategoryId,
-            Categories = _context.Categories.ToList()
+            Categories = _context.Categories.ToList(),
+            ExistingImage = book.Image
         };
 
         return View(viewModel);
     }
 
-    // POST: Books/Edit/5
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, BookModel bookModel)
@@ -123,11 +117,13 @@ public class BooksController : Controller
 
                 if (bookModel.Image != null)
                 {
-                    string uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images");
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + bookModel.Image.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    bookModel.Image.CopyTo(new FileStream(filePath, FileMode.Create));
-                    book.Image = uniqueFileName;
+                    if (bookModel.ExistingImage != null)
+                    {
+                        string filePath = Path.Combine(_hostEnvironment.WebRootPath, "Uploads", bookModel.ExistingImage);
+                        System.IO.File.Delete(filePath);
+                    }
+
+                    book.Image = ProcessUploadedFile(bookModel);
                 }
 
                 _context.Update(book);
@@ -150,7 +146,7 @@ public class BooksController : Controller
         return View(bookModel);
     }
 
-    // GET: Books/Delete/5
+  
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
@@ -167,7 +163,7 @@ public class BooksController : Controller
         return View(book);
     }
 
-    // POST: Books/Delete/5
+ 
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
@@ -188,4 +184,26 @@ public class BooksController : Controller
         return _context.Books.Any(e => e.Id == id);
     }
 
+    private string ProcessUploadedFile(BookModel bookModel)
+    {
+        string uniqueFileName = null;
+        string path = Path.Combine(_hostEnvironment.WebRootPath, "images");
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+
+        if (bookModel.Image != null)
+        {
+            string uploadsFolder = Path.Combine(_hostEnvironment.WebRootPath, "images");
+            uniqueFileName = Guid.NewGuid().ToString() + "_" + bookModel.Image.FileName;
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                bookModel.Image.CopyTo(fileStream);
+            }
+        }
+
+        return uniqueFileName;
+    }
 }
