@@ -27,24 +27,41 @@ public class BooksController : Controller
         var books = await _context.Books.Include(b => b.Category).ToListAsync();
         return View(books);
     }
-  
 
+    public async Task<IActionResult> Details(int? id)
+    {
+        if (id == null || _context.Books == null)
+        {
+            return NotFound();
+        }
+
+        var book = await _context.Books
+            .Include(b => b.Category)
+            .FirstOrDefaultAsync(m => m.Id == id);
+        if (book == null)
+        {
+            return NotFound();
+        }
+
+        return View(book);
+    }
 
     public IActionResult Create()
     {
         var categories = _context.Categories.ToList();
-        var viewModel = new BookModel
+        var bookModel = new BookModel
         {
             Categories = categories
         };
-        return View(viewModel);
+        return View(bookModel); 
     }
-   
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BookModel bookModel)
     {
-            if (ModelState.IsValid)
+        try { 
+        if (ModelState.IsValid)
         {
             string uniqueFileName = ProcessUploadedFile(bookModel);
             Book book = new()
@@ -53,12 +70,18 @@ public class BooksController : Controller
                 Quantity = bookModel.Quantity,
                 Price = bookModel.Price,
                 CategoryId = bookModel.CategoryId,
-                Image = uniqueFileName
+                Image = uniqueFileName,
             };
 
             _context.Add(book);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+        }
+        catch (Exception)
+        {
+
+            throw;
         }
         bookModel.Categories = _context.Categories.ToList();
         return View(bookModel);
