@@ -22,12 +22,14 @@ public class BooksController : Controller
         _hostEnvironment = hostEnvironment;
     }
 
+    [Authorize]
     public async Task<IActionResult> Index()
     {
         var books = await _context.Books.Include(b => b.Category).ToListAsync();
         return View(books);
     }
 
+    [Authorize]
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null || _context.Books == null)
@@ -46,6 +48,7 @@ public class BooksController : Controller
         return View(book);
     }
 
+    [Authorize]
     public IActionResult Create()
     {
         var categories = _context.Categories.ToList();
@@ -53,41 +56,42 @@ public class BooksController : Controller
         {
             Categories = categories
         };
-        return View(bookModel); 
+        return View(bookModel);
     }
 
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(BookModel bookModel)
     {
-        try { 
-        if (ModelState.IsValid)
+        bookModel.Categories = _context.Categories.ToList();
+        try
         {
-            string uniqueFileName = ProcessUploadedFile(bookModel);
-            Book book = new()
+            if (ModelState.IsValid)
             {
-                Title = bookModel.Title,
-                Quantity = bookModel.Quantity,
-                Price = bookModel.Price,
-                CategoryId = bookModel.CategoryId,
-                Image = uniqueFileName,
-            };
+                string uniqueFileName = ProcessUploadedFile(bookModel);
+                Book book = new()
+                {
+                    Title = bookModel.Title,
+                    Quantity = bookModel.Quantity,
+                    Price = bookModel.Price,
+                    CategoryId = bookModel.CategoryId,
+                    Image = uniqueFileName,
+                };
 
-            _context.Add(book);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
+                _context.Add(book);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
         }
         catch (Exception)
         {
-
             throw;
         }
-        bookModel.Categories = _context.Categories.ToList();
         return View(bookModel);
     }
 
-
+    [Authorize]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null)
@@ -117,7 +121,7 @@ public class BooksController : Controller
         return View(viewModel);
     }
 
-
+    [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, BookModel bookModel)
@@ -169,7 +173,7 @@ public class BooksController : Controller
         return View(bookModel);
     }
 
-  
+    [Authorize]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null)
@@ -186,7 +190,7 @@ public class BooksController : Controller
         return View(book);
     }
 
- 
+    [Authorize]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

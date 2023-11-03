@@ -9,13 +9,17 @@ namespace WebASM1670.Models
         [Key]
         public int Id { get; set; }
 
+        public int BookId { get; set; }
+
         public int Quantity { get; set; }
 
-        public double TotalPrice { get; set; }
+        public Book Book { get; set; }
 
-        public int UserId { get; set; }
+        public string Name { get; set; }
 
-        public List<OrderItem> Items { get; set; }
+        public int Phone {  get; set; }
+
+        public string Address { get; set; }
 
     }
 }

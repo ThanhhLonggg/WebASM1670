@@ -27,6 +27,5 @@ namespace WebASM1670.Models
 
         public Category Category { get; set; }
 
-        public List<CartItem> CartItems { get; set; }
     }
 }

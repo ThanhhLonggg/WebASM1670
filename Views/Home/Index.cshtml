@@ -16,9 +16,9 @@
                     <a asp-controller="Books" asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary">View Details</a>
                     <br>
                     <br>
-                    <form asp-action="Create" asp-controller="Cart">
+                    <form asp-action="Create" asp-controller="Orders">
                         <input type="hidden" value="@item.Id" name="BookId">
-                        <button type="submit">Add To Cart</button>
+                        <button type="submit">Order</button>
                     </form>
 
                 </div>

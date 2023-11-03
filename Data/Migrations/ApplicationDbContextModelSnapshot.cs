@@ -310,7 +310,6 @@ namespace WebASM1670.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("CateName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -326,32 +325,18 @@ namespace WebASM1670.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<double>("TotalPrice")
-                        .HasColumnType("float");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Orders");
-                });
-
-            modelBuilder.Entity("WebASM1670.Models.OrderItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("BookId")
                         .HasColumnType("int");
 
-                    b.Property<int>("OrderId")
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Phone")
                         .HasColumnType("int");
 
                     b.Property<int>("Quantity")
@@ -361,9 +346,7 @@ namespace WebASM1670.Data.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("OrderItems");
+                    b.ToTable("Orders");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -431,7 +414,7 @@ namespace WebASM1670.Data.Migrations
             modelBuilder.Entity("WebASM1670.Models.CartItem", b =>
                 {
                     b.HasOne("WebASM1670.Models.Book", "Book")
-                        .WithMany("CartItems")
+                        .WithMany()
                         .HasForeignKey("BookId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -443,7 +426,7 @@ namespace WebASM1670.Data.Migrations
                     b.Navigation("Book");
                 });
 
-            modelBuilder.Entity("WebASM1670.Models.OrderItem", b =>
+            modelBuilder.Entity("WebASM1670.Models.Order", b =>
                 {
                     b.HasOne("WebASM1670.Models.Book", "Book")
                         .WithMany()
@@ -451,20 +434,7 @@ namespace WebASM1670.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("WebASM1670.Models.Order", "Order")
-                        .WithMany("Items")
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Book");
-
-                    b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("WebASM1670.Models.Book", b =>
-                {
-                    b.Navigation("CartItems");
                 });
 
             modelBuilder.Entity("WebASM1670.Models.Cart", b =>
@@ -475,11 +445,6 @@ namespace WebASM1670.Data.Migrations
             modelBuilder.Entity("WebASM1670.Models.Category", b =>
                 {
                     b.Navigation("Books");
-                });
-
-            modelBuilder.Entity("WebASM1670.Models.Order", b =>
-                {
-                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,11 +1,12 @@
 ﻿using WebASM1670.Models;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace WebASM1670.ViewModels
 {
     public class BookModel : EditImageViewModel
     {
-        [Required]
+        [Key]
         public int Id { get; set; }
 
         [Required]
@@ -23,8 +24,8 @@ namespace WebASM1670.ViewModels
         [Required]
         public int CategoryId { get; set; }
 
+        [ValidateNever]
         public List<Category> Categories { get; set; }
 
-        public List<CartItem> CartItems { get; set; }
     }
 }

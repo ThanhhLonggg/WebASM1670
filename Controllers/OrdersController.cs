@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using WebASM1670.Data;
 using WebASM1670.Models;
+using WebASM1670.ViewModels;
 
 namespace WebASM1670.Controllers
 {
@@ -18,59 +21,53 @@ namespace WebASM1670.Controllers
         {
             _context = context;
         }
-
-        // GET: Orders
+        [Authorize]
         public async Task<IActionResult> Index()
         {
-              return _context.Orders != null ? 
-                          View(await _context.Orders.ToListAsync()) :
-                          Problem("Entity set 'ApplicationDbContext.Order'  is null.");
+            return _context.Orders != null ?
+                        View(await _context.Orders.ToListAsync()) :
+                        Problem("Entity set 'ApplicationDbContext.Orders'  is null.");
         }
 
-        // GET: Orders/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Orders == null)
-            {
-                return NotFound();
-            }
-
-            var order = await _context.Orders
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            return View(order);
-        }
-
-        // GET: Orders/Create
         public IActionResult Create()
         {
-            return View();
+            var books = _context.Books.ToList();
+            var orderModel = new OrderModel
+            {
+                Books = books
+            };
+            return View(orderModel);
         }
 
-        // POST: Orders/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Quantity,TotalPrice,UserId")] Order order)
+        public async Task<IActionResult> Create(OrderModel orderModel)
         {
+            orderModel.Books = _context.Books.ToList();
+
+
             if (ModelState.IsValid)
             {
+                Order order = new()
+                {
+                    Name = orderModel.Name,
+                    Quantity = orderModel.Quantity,
+                    Address = orderModel.Address,
+                    BookId = orderModel.BookId,
+                    Phone = orderModel.Phone,
+                };
+
                 _context.Add(order);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(order);
+            return View(orderModel);
         }
 
-        // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null || _context.Orders == null)
+            if (id == null)
             {
                 return NotFound();
             }
@@ -80,17 +77,28 @@ namespace WebASM1670.Controllers
             {
                 return NotFound();
             }
-            return View(order);
+
+            ViewBag.Books = _context.Books.ToList();
+
+            var orderModel = new OrderModel
+            {
+                Id = order.Id,
+                Name = order.Name,
+                Quantity = order.Quantity,
+                Address = order.Address,
+                BookId = order.BookId,
+                Books = _context.Books.ToList(),
+                Phone = order.Phone
+            };
+
+            return View(orderModel);
         }
 
-        // POST: Orders/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Quantity,TotalPrice,UserId")] Order order)
+        public async Task<IActionResult> Edit(int id, OrderModel orderModel)
         {
-            if (id != order.Id)
+            if (id != orderModel.Id)
             {
                 return NotFound();
             }
@@ -99,12 +107,20 @@ namespace WebASM1670.Controllers
             {
                 try
                 {
+                    var order = await _context.Orders.FindAsync(id);
+
+                    order.Name = orderModel.Name;
+                    order.Quantity = orderModel.Quantity;
+                    order.Phone = orderModel.Phone;
+                    order.BookId = orderModel.BookId;
+                    order.Address = orderModel.Address;
+
                     _context.Update(order);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!OrderExists(order.Id))
+                    if (!OrderExists(orderModel.Id))
                     {
                         return NotFound();
                     }
@@ -115,10 +131,11 @@ namespace WebASM1670.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            return View(order);
+            orderModel.Books = _context.Books.ToList();
+            return View(orderModel);
         }
 
-        // GET: Orders/Delete/5
+        
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null || _context.Orders == null)
@@ -136,28 +153,27 @@ namespace WebASM1670.Controllers
             return View(order);
         }
 
-        // POST: Orders/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             if (_context.Orders == null)
             {
-                return Problem("Entity set 'ApplicationDbContext.Order'  is null.");
+                return Problem("Entity set 'ApplicationDbContext.Orders'  is null.");
             }
             var order = await _context.Orders.FindAsync(id);
             if (order != null)
             {
                 _context.Orders.Remove(order);
             }
-            
+
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         private bool OrderExists(int id)
         {
-          return (_context.Orders?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Orders?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
